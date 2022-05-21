@@ -1,0 +1,87 @@
+---
+title: 'TidyTuesday: Crime Patterns during COVID-19'
+author: "Nick van Doormaal"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+```
+
+## Import the two datasets: 'crime' and 'residents'
+```{r read-data}
+crimes <- read_csv(
+  file = here("data/tidy-tuesday_220524", "crimes.csv")
+)
+residents <- read_csv(
+  file = here("data/tidy-tuesday_220524", "population.csv")
+)
+```
+
+## Exploring the data structures
+```{r data-structure}
+glimpse(crimes)
+
+glimpse(residents)
+```
+
+## Population trends for the Netherlands between Jan 2012 - April 2022
+```{r population-trend}
+covid_start <- lubridate::as_date("2020-03-23")
+
+ggplot(
+  data = residents
+) +
+  geom_line(
+    aes(x = date, y = population / 1000000, color = lubridate::year(date)),
+    lwd = 1.5
+  ) +
+  geom_vline(xintercept = covid_start, lty = "dashed", size = 1.5) +
+  scale_x_date("Time (in months)", breaks = "1 year", date_labels = "%b\n%Y") + 
+  scale_y_continuous("Popultation (in millions)") +
+  scale_color_viridis_c(direction = -1, guide = "none") +
+  theme_bw() +
+  labs(
+    title = "Population trend of the Netherlands",
+    subtitle = "Between Jan 2012 and Apr 2022",
+    caption = "Data from CBS"
+  )
+```
+
+## Create residential burglarly rate
+```{r burglarly-rate}
+burglarly <- crimes %>% 
+  filter(crime_type == "burglary") %>% 
+  left_join(
+    y = residents
+  ) %>% 
+  mutate(
+    rate = frequency / population * 1000
+  )
+```
+
+## Visualise the burglarly rate
+```{r}
+ggplot(
+  data = burglarly
+) +
+  geom_line(
+    aes(x = date, y = rate, color = lubridate::year(date)),
+    lwd = 1.5
+  ) +
+  geom_vline(xintercept = covid_start, lty = "dashed", size = 1.5) +
+  scale_x_date("Time (in months)", breaks = "1 year", date_labels = "%b\n%Y") + 
+  scale_y_continuous("Burglarly rate (per 1000)") +
+  scale_color_viridis_c(direction = -1, guide = "none") +
+  theme_bw() +
+  labs(
+    title = "Trends of burglarly rates in the Netherlands",
+    subtitle = "Between Jan 2012 and Apr 2022",
+    caption = "Data from CBS"
+  )
+```
+
