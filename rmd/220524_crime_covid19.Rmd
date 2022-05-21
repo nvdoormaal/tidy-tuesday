@@ -41,6 +41,7 @@ ggplot(
     lwd = 1.5
   ) +
   geom_vline(xintercept = covid_start, lty = "dashed", size = 1.5) +
+  geom_label(aes(x = covid_start, y = max(population)/1000000), label = "Start lockdown") +
   scale_x_date("Time (in months)", breaks = "1 year", date_labels = "%b\n%Y") + 
   scale_y_continuous("Popultation (in millions)") +
   scale_color_viridis_c(direction = -1, guide = "none") +
@@ -53,33 +54,33 @@ ggplot(
 ```
 
 ## Create residential burglarly rate
-```{r burglarly-rate}
-burglarly <- crimes %>% 
-  filter(crime_type == "burglary") %>% 
+```{r calculate-rate}
+rates <- crimes %>% 
   left_join(
     y = residents
   ) %>% 
   mutate(
     rate = frequency / population * 1000
   )
+  
 ```
 
 ## Visualise the burglarly rate
 ```{r}
 ggplot(
-  data = burglarly
+  data = rates
 ) +
   geom_line(
-    aes(x = date, y = rate, color = lubridate::year(date)),
+    aes(x = date, y = rate, color = crime_type),
     lwd = 1.5
   ) +
   geom_vline(xintercept = covid_start, lty = "dashed", size = 1.5) +
   scale_x_date("Time (in months)", breaks = "1 year", date_labels = "%b\n%Y") + 
   scale_y_continuous("Burglarly rate (per 1000)") +
-  scale_color_viridis_c(direction = -1, guide = "none") +
+  scale_color_viridis_d(direction = -1, guide = "none") +
   theme_bw() +
   labs(
-    title = "Trends of burglarly rates in the Netherlands",
+    title = "Trends of crime rates in the Netherlands",
     subtitle = "Between Jan 2012 and Apr 2022",
     caption = "Data from CBS"
   )
