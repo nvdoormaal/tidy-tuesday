@@ -65,8 +65,8 @@ rates <- crimes %>%
   
 ```
 
-## Visualise the burglarly rate
-```{r}
+## Visualise the crime rates
+```{r rate-plot}
 ggplot(
   data = rates
 ) +

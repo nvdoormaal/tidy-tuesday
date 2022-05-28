@@ -1,0 +1,90 @@
+---
+title: "TidyTuesday: 911 calls for service"
+author: "Nick van Doormaal"
+date: "31-05-2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+```
+
+## Import data from GitHub
+### You need the internet for this!
+```{r read-data}
+detroit_df <- read_csv("https://github.com/langtonhugh/nscr_graphics/raw/main/data/detroit_calls.csv")
+```
+
+## Data exploration
+```{r data-exploration}
+glimpse(detroit_df)
+```
+## What are the variable names?
+```{r variable-names}
+colnames(detroit_df)
+```
+## What is the average response time (totalresponsetime) for calls?
+```{r avg-response-time}
+## Base R
+mean(detroit_df$totalresponsetime)
+
+## Tidyverse
+detroit_df %>% 
+  summarise(
+    avg_response = mean(totalresponsetime)
+  )
+```
+
+## What is the most common call type?
+```{r most-common-call}
+## Base R
+sort(table(detroit_df$calldescription), decreasing = TRUE)
+
+## Tidyverse
+detroit_df %>% 
+  count(calldescription, sort = TRUE)
+```
+## How many calls were in-progress shots fired?
+```{r count-shots-IP}
+## Base R
+nrow(detroit_df[detroit_df$calldescription == "SHOTS FIRED IP",])
+
+## Tidyverse
+detroit_df %>% 
+  filter(calldescription == "SHOTS FIRED IP") %>% 
+  nrow() #or nrow()
+```
+
+## How does average response time differ between call types?
+```{r response-time-across-types}
+## Average response time in a tiblle
+detroit_df %>% 
+  group_by(calldescription) %>% 
+  summarise(
+    response_time = mean(totalresponsetime)
+  )
+
+
+detroit_top <- detroit_df %>% 
+  count(calldescription, sort = TRUE) %>% 
+  slice_max(n, n = 9)
+
+detroit_df %>% 
+  filter(
+    calldescription %in% detroit_top$calldescription
+  ) %>% 
+  ggplot() +
+  geom_boxplot(
+    aes(x = reorder(calldescription, totalresponsetime, na.rm = TRUE), y = totalresponsetime, fill = calldescription), show.legend = FALSE
+  ) +
+  scale_x_discrete("", labels = function(x) str_wrap(x, width = 10)) +
+  scale_y_log10() +
+  scale_fill_brewer(palette = "Reds") +
+  theme_bw()
+
+
+```
+
